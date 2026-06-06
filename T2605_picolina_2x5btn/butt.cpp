@@ -22,8 +22,14 @@ typedef struct
     char            value;
     butt_status_et  status;        
     uint8_t         debounce;
-    uint8_t         task_indx;
 } butt_st;
+
+typedef struct
+{
+    uint8_t pin;
+    uint8_t state;
+
+} butt_led_st;
 
 typedef struct 
 {
@@ -53,12 +59,34 @@ butt_st butt[MCP_PIN_NBR] =
     { 15, 'X', BUTT_STATUS_NOT_AVAIL, 0 },
 };
 
-uint8_t butt_led_pin[2] = {13,14};
+butt_led_st butt_led[2] = 
+{
+    { 13, LOW},
+    { 14, LOW}
+};
 
 void butt_task(void);
 atask_st butt_th               = {"RFM69 Task     ", 50,0, 0, 255, 0, 1, butt_task};
 //atask_st modem_th            = {"Radio Modem    ", 100,0, 0, 255, 0, 1, modem_task};
 butt_ctrl_st butt_ctrl = {0};
+
+void butt_set_led(uint8_t led, uint8_t state)
+{
+    Serial.printf("set led %d -> %d\n",led,state);
+    if (state != LOW) butt_led[led].state = HIGH;
+    else butt_led[led].state = LOW;
+    mcp.digitalWrite(butt_led[led].pin, butt_led[led].state);
+}
+
+
+void butt_toggle_led(uint8_t led)
+{
+    if (butt_led[led].state == LOW) butt_led[led].state = HIGH;
+    else butt_led[led].state = LOW;
+    mcp.digitalWrite(butt_led[led].pin, butt_led[led].state);
+}
+
+
 
 void butt_initialize(void) 
 {   
@@ -74,12 +102,12 @@ void butt_initialize(void)
             mcp.setupInterruptPin(butt[i].pin, LOW);
         }
     }
-    for(uint8_t i = 0; i < 2; i++) mcp.pinMode(butt_led_pin[i], OUTPUT);
+    for(uint8_t i = 0; i < 2; i++) mcp.pinMode(butt_led[i].pin, OUTPUT);
     Serial.println("MCP23xxx Button Test!");
     // configure pin for input with pull up
     mcp.setupInterrupts(true, true, LOW);
     //mcp.setupInterruptPin(7, LOW);
-    mcp.digitalWrite(butt_led_pin[0], HIGH);
+
     for (uint8_t i = 0; i < MCP_PIN_NBR; i++) {  
         if(butt[i].status == BUTT_STATUS_IDLE)
         {
@@ -87,14 +115,17 @@ void butt_initialize(void)
             mcp.setupInterruptPin(butt[i].pin, LOW);
         }
     }
-    for(uint8_t i = 0; i < 2; i++) mcp.pinMode(butt_led_pin[i], OUTPUT);
+    for(uint8_t i = 0; i < 2; i++) mcp.pinMode(butt_led[i].pin, OUTPUT);
     Serial.println("MCP23xxx Button Test!");
 
     // configure pin for input with pull up
     mcp.setupInterrupts(true, true, LOW);
  
     //mcp.setupInterruptPin(7, LOW);
-    mcp.digitalWrite(butt_led_pin[0], HIGH);
+    //mcp.digitalWrite(butt_led_pin[0], HIGH);
+    butt_set_led(BUTT_LED_WHITE, LOW);
+    butt_set_led(BUTT_LED_GREEN, LOW);
+
 
     butt_ctrl.task_indx =  atask_add_new(&butt_th);
 

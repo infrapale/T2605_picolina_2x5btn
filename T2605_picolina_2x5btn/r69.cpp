@@ -64,7 +64,7 @@ void r69_task(void)
         case 10:
             r69.butt_val = butt_read(&r69.butt_status);
             if(r69.butt_val != '.'){
-                Serial.printf("%c-%d\n", r69.butt_val, r69.butt_status);
+                // Serial.printf("%c-%d\n", r69.butt_val, r69.butt_status);
                 r69_th.state = 20;
             }
             break;   
@@ -73,6 +73,8 @@ void r69_task(void)
             {
                 case '0':
                     r69.duration = 0;
+                    butt_set_led(BUTT_LED_GREEN, LOW);
+
                     break;
                 case '1':
                     r69.duration = 1;
@@ -86,12 +88,39 @@ void r69_task(void)
                 case '4':    
                     r69.duration = 7200;
                     break;
+                default:
+                    break;
             }
-            sprintf(r69.buff,"<R;RANTA;%s;PUMP;%d>", main_ctrl.my_addr, r69.duration);
+            switch(r69.butt_val)
+            {
+                case '0':
+                case '1':
+                case '2':    
+                case '3':    
+                case '4':    
+                    sprintf(r69.buff,"<R;RANTA;%s;PUMP;%d>", main_ctrl.my_addr, r69.duration);
+                    butt_set_led(BUTT_LED_WHITE, HIGH);
+
+                    break;
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    sprintf(r69.buff,"<R;TEST;%s;RELAY;%dc", main_ctrl.my_addr, r69.butt_val);
+                    break;
+
+            }
+            if(r69.duration > 0 ) butt_set_led(BUTT_LED_GREEN, HIGH);
             Serial.println(r69.buff);    
             //Serial1.println(r69.buff);    
             rfm69_modem.radiate(r69.buff);
             r69_th.state = 10;
             break;
+        case 30:
+            butt_set_led(BUTT_LED_WHITE, LOW);
+            r69_th.state = 10;
+            break;
+
     }
 }

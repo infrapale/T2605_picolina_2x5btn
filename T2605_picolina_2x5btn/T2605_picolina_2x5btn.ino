@@ -4,6 +4,24 @@
 // both included here to make things simple for example
 // #include <Adafruit_MCP23X08.h>
 // #include <Adafruit_MCP23X17.h>
+/*
+        |   - - - 433 MHz
+        |
+    -----------
+    (9)     (8)
+    (7)     (6)
+    (5)     (4)
+    (3)     (2)
+    (1)     (0)
+    -----------
+        HHH
+        HHH
+         H      USB
+*/
+
+
+
+
 #include    <Wire.h>
 #include    "main.h"
 #include    "secrets.h"
