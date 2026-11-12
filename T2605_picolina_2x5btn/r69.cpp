@@ -2,7 +2,7 @@
 #include    "main.h"
 #include    "secrets.h"
 #include    <RH_RF69.h>
-#include    "Rfm69Modem.h"
+#include    "modem69.h"
 #include    "atask.h"
 #include    "io.h"
 #include    "r69.h"
@@ -26,7 +26,7 @@ typedef struct
 uint8_t key[] = RFM69_KEY;
 
 RH_RF69         rf69(PIN_RFM_CS, PIN_RFM_IRQ);
-Rfm69Modem      rfm69_modem(&rf69,  PIN_RFM_RESET, -1 );
+Modem69         rfm69_modem(&rf69,  PIN_RFM_RESET);
 //modem_data_st   modem_data = {MY_MODULE_TAG, MY_MODULE_ADDR};
 
 extern main_ctrl_st main_ctrl;
@@ -41,17 +41,37 @@ void modem_task(void)
 void r69_task(void);
 atask_st r69_th                = {"RFM69 Task     ", 100,0, 0, 255, 0, 1, r69_task};
 atask_st modem_th              = {"Radio Modem    ", 100,0, 0, 255, 0, 1, modem_task};
-//atask_st modem_th            = {"Radio Modem    ", 100,0, 0, 255, 0, 1, modem_task};
 
-void r69_initialize(Stream &s)
+void io_rfm69_spi0_initialize(void) 
 {
-    rfm69_modem.initialize(MY_MODULE_TAG, MY_MODULE_ADDR, key);
-    atask_add_new(&modem_th);
-    rfm69_modem.radiate(__APP__);
+    SPI.setRX(PIN_RFM_MISO);
+    SPI.setTX(PIN_RFM_MOSI);
+    SPI.setSCK(PIN_RFM_SCK);
+    SPI.setCS(PIN_RFM_CS);
+    pinMode(PIN_RFM_RESET,OUTPUT);
+    pinMode(PIN_IO_RESET,OUTPUT);
+    digitalWrite(PIN_RFM_RESET,LOW);
+    digitalWrite(PIN_IO_RESET,LOW);
+    SPI.begin();
 
-    rfm69_modem.set_serial(s);
-    r69.task_indx =  atask_add_new(&r69_th);
+    SPI.beginTransaction(SPISettings(
+        1000000,      // 8 MHz
+        MSBFIRST,
+        SPI_MODE0
+    ));
 }
+
+
+
+void r69_initialize(void)
+{
+    io_rfm69_spi0_initialize();
+    rfm69_modem.initialize(key);
+    atask_add_new(&modem_th);
+    r69.task_indx =  atask_add_new(&r69_th);
+    rfm69_modem.radiate(__APP__);
+}
+
 
 void r69_task(void)
 {
@@ -64,7 +84,7 @@ void r69_task(void)
         case 10:
             r69.butt_val = butt_read(&r69.butt_status);
             if(r69.butt_val != '.'){
-                // Serial.printf("%c-%d\n", r69.butt_val, r69.butt_status);
+                //Serial.printf("%c-%d\n", r69.butt_val, r69.butt_status);
                 r69_th.state = 20;
             }
             break;   
@@ -73,7 +93,7 @@ void r69_task(void)
             {
                 case '0':
                     r69.duration = 0;
-                    butt_set_led(BUTT_LED_GREEN, LOW);
+                    //butt_set_led(BUTT_LED_GREEN, LOW);
 
                     break;
                 case '1':
@@ -94,12 +114,16 @@ void r69_task(void)
             switch(r69.butt_val)
             {
                 case '0':
+                    sprintf(r69.buff,"<E;Katos;C;12>"); break;
                 case '1':
+                    sprintf(r69.buff,"<E;PIR_1;C;34>"); break;
                 case '2':    
+                    sprintf(r69.buff,"<E;PIR_2;C;45>"); break;
                 case '3':    
+                    sprintf(r69.buff,"<E;PIR_3;C;1>"); break;
                 case '4':    
-                    sprintf(r69.buff,"<R;RANTA;%s;PUMP;%d>", main_ctrl.my_addr, r69.duration);
-                    butt_set_led(BUTT_LED_WHITE, HIGH);
+                    // sprintf(r69.buff,"<R;RANTA;%s;PUMP;%d>", main_ctrl.my_addr, r69.duration);
+                    // butt_set_led(BUTT_LED_WHITE, HIGH);
 
                     break;
                 case '5':

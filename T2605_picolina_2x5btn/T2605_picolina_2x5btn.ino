@@ -41,25 +41,25 @@ main_ctrl_st main_ctrl = {
 void modem_task(void);
 void print_debug_task(void);
 
-atask_st modem_handle              = {"Radio Modem    ", 100,0, 0, 255, 0, 1, modem_task};
+// atask_st modem_handle           = {"Radio Modem    ", 100,0, 0, 255, 0, 1, modem_task};
 atask_st debug_th                  = {"Debug Task     ", 2000,    0,     0,  255,    0,  1,  print_debug_task };
 
 
 void setup() {
-    io_initialize();
     Serial1.setTX(PIN_TX0);   
     Serial1.setRX(PIN_RX0);
     Serial.begin(115200);
     Serial1.begin(9600);
     delay(2000);
-    while (!Serial); 
+    //while (!Serial); 
+    io_initialize();
 
     Wire.setSDA(PIN_I2C0_SDA);
     Wire.setSCL(PIN_I2C0_SCL);
-
     atask_initialize();
+    //atask_add_new(&debug_th);
+    r69_initialize();
     butt_initialize();
-    r69_initialize(Serial1);
 
 
 
@@ -75,4 +75,9 @@ void loop() {
     //     Serial.printf("%c-%d\n",c, status);
     // }
 
+}
+
+
+void print_debug_task(void){
+    atask_print_status(true);
 }

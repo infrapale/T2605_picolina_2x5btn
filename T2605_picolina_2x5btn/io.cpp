@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <SPI.h>
 #include "atask.h"
 #include "main.h"
 #include "io.h"
@@ -49,6 +50,7 @@ void io_task(void);
 //                                  123456789012345   ival  next  state  prev  cntr flag  call backup
 atask_st io_task_handle       =   {"I/O Task       ", 100,     0,     0,  255,    0,  1,  io_task };
 
+
 void io_initialize(void)
 {
     analogReadResolution(12);
@@ -72,7 +74,7 @@ void io_initialize(void)
 }
 void io_task_initialize(void)
 {
-    //io_ctrl.tindx =  atask_add_new(&io_task_handle);
+    io_ctrl.tindx =  atask_add_new(&io_task_handle);
 }
 
 

@@ -3,8 +3,7 @@
 
 #include    "main.h"
 #include    "secrets.h"
-#include    <RH_RF69.h>
-#include    "Rfm69Modem.h"
+#include    "r69.h"
 #include    "atask.h"
 #include    "io.h"
 #include    "butt.h"
@@ -66,13 +65,14 @@ butt_led_st butt_led[2] =
 };
 
 void butt_task(void);
-atask_st butt_th               = {"RFM69 Task     ", 50,0, 0, 255, 0, 1, butt_task};
+
+atask_st butt_th               = {"Butt Task      ", 50,0, 0, 255, 0, 1, butt_task};
 //atask_st modem_th            = {"Radio Modem    ", 100,0, 0, 255, 0, 1, modem_task};
 butt_ctrl_st butt_ctrl = {0};
 
 void butt_set_led(uint8_t led, uint8_t state)
 {
-    Serial.printf("set led %d -> %d\n",led,state);
+    //Serial.printf("set led %d -> %d\n",led,state);
     if (state != LOW) butt_led[led].state = HIGH;
     else butt_led[led].state = LOW;
     mcp.digitalWrite(butt_led[led].pin, butt_led[led].state);
@@ -151,50 +151,56 @@ void butt_task(void) {
     uint16_t btn_bm;
     uint16_t butt_x_pressed;
 
-    if (!digitalRead(PIN_IRQ_A)) {
-        butt_x = mcp.getLastInterruptPin();
-        // btn_bm = mcp.getCapturedInterrupt();
-        // butt_x_bm = (1 << butt_x);
-        butt[butt_x].debounce++;
-        if(butt[butt_x].debounce > BUTT_SHORT_PRESS) butt[butt_x].status = BUTT_STATUS_SHORT;
-        if(butt[butt_x].debounce > BUTT_LONG_PRESS) butt[butt_x].status = BUTT_STATUS_LONG;
-        // Serial.printf("Interrupt on pin: %d = %c  - %d\n", 
-        //     butt_x, 
-        //     butt[butt_x].value,
-        //     butt[butt_x].status);
-
-        
-
-        // NOTE: If using DEFVAL, INT clears only if interrupt
-        // condition does not exist.
-        // See Fig 1-7 in datasheet.
-        mcp.clearInterrupts();  // clear
-    }
-    else {
-        for (uint8_t i = 0; i < MCP_PIN_NBR; i++) {  
-            switch(butt[i].status)
+    switch(butt_th.state)
+    {
+        case 0:
+            butt_th.state = 10;
+            break;
+        case 10:
+            if (!digitalRead(PIN_IRQ_A)) 
             {
-                case BUTT_STATUS_IDLE:
-                    break;
-                case BUTT_STATUS_SHORT:
-                    //Serial.printf("Short: %c\n",butt[i].value);
-                    butt_ctrl.status = butt[i].status;
-                    butt_ctrl.value  = butt[i].value;
-                    butt[i].status = BUTT_STATUS_IDLE;
-                    butt[i].debounce = 0;
-                    break;
-                case BUTT_STATUS_LONG:
-                    //Serial.printf("Long: %c\n",butt[i].value);
-                    butt_ctrl.status = butt[i].status;
-                    butt_ctrl.value  = butt[i].value;
-                    butt[i].status = BUTT_STATUS_IDLE;
-                    butt[i].debounce = 0;
-                    break;
+                butt_x = mcp.getLastInterruptPin();
+                // btn_bm = mcp.getCapturedInterrupt();
+                // butt_x_bm = (1 << butt_x);
+                if(butt_x < MCP_PIN_NBR)
+                {
+
+                    butt[butt_x].debounce++;
+                    if(butt[butt_x].debounce > BUTT_SHORT_PRESS) butt[butt_x].status = BUTT_STATUS_SHORT;
+                    if(butt[butt_x].debounce > BUTT_LONG_PRESS) butt[butt_x].status = BUTT_STATUS_LONG;
+                    //Serial.printf("Interrupt on pin: %d = %c  - %d\n", butt_x, butt[butt_x].value,  butt[butt_x].status);
+                    // NOTE: If using DEFVAL, INT clears only if interrupt
+                    // condition does not exist.
+                    // See Fig 1-7 in datasheet.
+                    mcp.clearInterrupts();  // clear
+                    butt_th.state = 20;
+                }
+            }
+            break;
+        case 20:
+            for (uint8_t i = 0; i < MCP_PIN_NBR; i++) {  
+                switch(butt[i].status)
+                {
+                    case BUTT_STATUS_IDLE:
+                        break;
+                    case BUTT_STATUS_SHORT:
+                        //Serial.printf("Short: %c\n",butt[i].value);
+                        butt_ctrl.status = butt[i].status;
+                        butt_ctrl.value  = butt[i].value;
+                        butt[i].status = BUTT_STATUS_IDLE;
+                        butt[i].debounce = 0;
+                        break;
+                    case BUTT_STATUS_LONG:
+                        //Serial.printf("Long: %c\n",butt[i].value);
+                        butt_ctrl.status = butt[i].status;
+                        butt_ctrl.value  = butt[i].value;
+                        butt[i].status = BUTT_STATUS_IDLE;
+                        butt[i].debounce = 0;
+                        break;
+                }
 
             }
-
-        }
-
+            butt_th.state = 10;
+            break;
     }
-
 }

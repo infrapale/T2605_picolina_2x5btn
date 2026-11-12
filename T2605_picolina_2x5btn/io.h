@@ -73,6 +73,8 @@ typedef enum
 
 void io_initialize(void);
 
+void io_rfm69_spi0_initialize(void);
+
 void io_task_initialize(void);
 
 void io_led_flash(color_et color, blink_et bindx, uint16_t tick_nbr);
