@@ -72,6 +72,9 @@ void r69_initialize(void)
     rfm69_modem.radiate(__APP__);
 }
 
+                    // sprintf(r69.buff,"<R;TEST;%s;RELAY;%dc", main_ctrl.my_addr, r69.butt_val);
+                    // sprintf(r69.buff,"<R;RANTA;%s;PUMP;%d>", main_ctrl.my_addr, r69.duration);
+                    // butt_set_led(BUTT_LED_WHITE, HIGH);
 
 void r69_task(void)
 {
@@ -116,24 +119,24 @@ void r69_task(void)
                 case '0':
                     sprintf(r69.buff,"<E;Katos;C;12>"); break;
                 case '1':
-                    sprintf(r69.buff,"<E;PIR_1;C;34>"); break;
+                    sprintf(r69.buff,"<E;Piha_1;C;34>"); break;
                 case '2':    
-                    sprintf(r69.buff,"<E;PIR_2;C;45>"); break;
+                    sprintf(r69.buff,"<E;Terassi;C;45>"); break;
                 case '3':    
                     sprintf(r69.buff,"<E;PIR_3;C;1>"); break;
                 case '4':    
-                    // sprintf(r69.buff,"<R;RANTA;%s;PUMP;%d>", main_ctrl.my_addr, r69.duration);
-                    // butt_set_led(BUTT_LED_WHITE, HIGH);
-
-                    break;
+                    sprintf(r69.buff,"<H;0>"); break;
                 case '5':
-                case '6':
+                   sprintf(r69.buff,"<H;1>"); break;
+                 case '6':
+                    sprintf(r69.buff,"<H;2>"); break;
                 case '7':
+                    sprintf(r69.buff,"<H;3>"); break;
                 case '8':
+                    sprintf(r69.buff,"<H;4>"); break;
                 case '9':
-                    sprintf(r69.buff,"<R;TEST;%s;RELAY;%dc", main_ctrl.my_addr, r69.butt_val);
-                    break;
-
+                    sprintf(r69.buff,"<H;4>"); break;
+ 
             }
             if(r69.duration > 0 ) butt_set_led(BUTT_LED_GREEN, HIGH);
             Serial.println(r69.buff);    
